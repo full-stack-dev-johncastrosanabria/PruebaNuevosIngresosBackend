@@ -1,0 +1,26 @@
+# Entorno y secretos
+.env
+keys/*.pem
+
+# Java
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# Node y Angular
+node_modules/
+dist/
+.angular/
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Sistema operativo y logs
+.DS_Store
+Thumbs.db
+*.log

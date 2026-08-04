@@ -1,0 +1,167 @@
+name: prueba-pedidos
+
+services:
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: pedidos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pedidos}
+      POSTGRES_USER: ${POSTGRES_USER:-pedidos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_en_produccion}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Postgres ejecuta este script automaticamente en el primer arranque, cuando el volumen esta vacio.
+      - ./init/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pedidos} -d ${POSTGRES_DB:-pedidos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [pedidos-net]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  kafka:
+    image: apache/kafka:4.3.1
+    container_name: pedidos-kafka
+    restart: unless-stopped
+    environment:
+      # Modo KRaft: el broker actua tambien como controlador, sin ZooKeeper.
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:${KAFKA_EXTERNAL_PORT:-29092}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # La topologia se declara de forma explicita en kafka-init, no por accidente.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    ports:
+      - "${KAFKA_EXTERNAL_PORT:-29092}:29092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks: [pedidos-net]
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  kafka-init:
+    image: apache/kafka:4.3.1
+    container_name: pedidos-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        crear() {
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 \
+            --create --if-not-exists --topic "$$1" \
+            --partitions "$$2" --replication-factor 1
+        }
+        crear order-placed 3
+        crear payment-processed 3
+        crear order-placed.DLT 1
+        crear payment-processed.DLT 1
+        echo 'Topics creados:'
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
+    networks: [pedidos-net]
+
+  order-ms:
+    build:
+      context: ./order-ms
+      dockerfile: Dockerfile
+    image: order-ms:1.0.0
+    container_name: pedidos-order-ms
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-pedidos}
+      DB_USER: ${POSTGRES_USER:-pedidos}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_en_produccion}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      RSA_PRIVATE_KEY_PATH: /run/keys/private_key.pem
+      RSA_PUBLIC_KEY_PATH: /run/keys/public_key.pem
+    # Se monta el directorio, no cada archivo: asi el sistema levanta aunque todavia no se
+    # hayan generado las llaves. En ese caso OrderMS arranca con un par efimero y el flujo
+    # funciona igual; generate-keys.sh es lo que lo vuelve persistente entre reinicios.
+    volumes:
+      - ./keys:/run/keys:ro
+    ports:
+      - "${ORDER_MS_PORT:-8080}:8080"
+    networks: [pedidos-net]
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+  payment-ms:
+    build:
+      context: ./payment-ms
+      dockerfile: Dockerfile
+    image: payment-ms:1.0.0
+    container_name: pedidos-payment-ms
+    restart: unless-stopped
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      PAYMENT_DECLINE_THRESHOLD: ${PAYMENT_DECLINE_THRESHOLD:-1000.00}
+      PAYMENT_PROCESSING_DELAY_MS: ${PAYMENT_PROCESSING_DELAY_MS:-1500}
+    ports:
+      - "${PAYMENT_MS_PORT:-8081}:8081"
+    networks: [pedidos-net]
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: frontend:1.0.0
+    container_name: pedidos-frontend
+    restart: unless-stopped
+    depends_on:
+      order-ms:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-4200}:8080"
+    networks: [pedidos-net]
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+volumes:
+  postgres_data:
+    name: pedidos-postgres-data
+
+networks:
+  pedidos-net:
+    name: pedidos-net
+    driver: bridge
