@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: payment-ms
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 1
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: payment-ms
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: com.prueba.paymentms.messaging
+        spring.json.value.default.type: com.prueba.paymentms.messaging.OrderPlacedEvent
+        spring.json.use.type.headers: false
+    listener:
+      ack-mode: record
+
+server:
+  port: 8081
+
+payment:
+  simulation:
+    decline-threshold: ${PAYMENT_DECLINE_THRESHOLD:1000.00}
+    processing-delay-ms: ${PAYMENT_PROCESSING_DELAY_MS:1500}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{correlationId:-sin-correlacion}] %logger{36} - %msg%n"
