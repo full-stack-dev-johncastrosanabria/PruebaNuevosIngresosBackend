@@ -1,0 +1,410 @@
+/* Sistema visual de la aplicacion.
+   Un unico tema, dos esquemas de color. Las variables se agrupan por rol, no por
+   valor, para que un cambio de paleta no obligue a tocar las plantillas. */
+
+:root {
+  --color-fondo: #f6f7f9;
+  --color-superficie: #ffffff;
+  /* Segunda capa neutra: barras, encabezados de tabla y zonas de apoyo. */
+  --color-superficie-tenue: #f0f2f5;
+  --color-borde: #d8dce3;
+  --color-borde-fuerte: #b9c0cb;
+  --color-texto: #1c1f24;
+  --color-texto-tenue: #59626e;
+  --color-acento: #2f6feb;
+  --color-acento-fuerte: #2259c9;
+  --color-acento-tenue: #eaf1fe;
+  --color-pendiente: #8a5c00;
+  --color-pendiente-fondo: #fff8e6;
+  --color-exito: #1a7f37;
+  --color-exito-fondo: #e8f5ec;
+  --color-error: #b42318;
+  --color-error-fondo: #fdeceb;
+
+  --radio: 8px;
+  --radio-sm: 6px;
+  --sombra: 0 1px 2px rgb(16 24 40 / 6%), 0 1px 3px rgb(16 24 40 / 10%);
+  --sombra-elevada: 0 4px 12px rgb(16 24 40 / 10%);
+  --anillo: 0 0 0 3px color-mix(in srgb, var(--color-acento) 28%, transparent);
+  --anillo-error: 0 0 0 3px color-mix(in srgb, var(--color-error) 24%, transparent);
+
+  /* Curva de salida: rapida al inicio y con frenado largo. */
+  --salida: cubic-bezier(0.22, 1, 0.36, 1);
+  --transicion: 160ms var(--salida);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-fondo: #14171c;
+    --color-superficie: #1c2027;
+    --color-superficie-tenue: #22272f;
+    --color-borde: #333b47;
+    --color-borde-fuerte: #46505f;
+    --color-texto: #e8eaed;
+    --color-texto-tenue: #a3adba;
+    --color-acento: #5b93ff;
+    --color-acento-fuerte: #7aa8ff;
+    --color-acento-tenue: #1a2540;
+    --color-pendiente: #e5b567;
+    --color-pendiente-fondo: #2e2510;
+    --color-exito: #63c98a;
+    --color-exito-fondo: #10261a;
+    --color-error: #f28b82;
+    --color-error-fondo: #2b1513;
+    --sombra: 0 1px 2px rgb(0 0 0 / 30%);
+    --sombra-elevada: 0 4px 14px rgb(0 0 0 / 40%);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Escala fija: en una interfaz de trabajo el tamano no deberia depender del viewport. */
+h1 { font-size: 1.5rem;   line-height: 1.25; margin: 0; letter-spacing: -0.011em; text-wrap: balance; }
+h2 { font-size: 1.0625rem; line-height: 1.3; margin: 0; letter-spacing: -0.006em; }
+
+.contenedor { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.contenedor--angosto { max-width: 720px; }
+
+/* Encabezado de pagina: titulo a la izquierda, accion a la derecha. */
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.encabezado > :first-child { margin-right: auto; }
+
+.tarjeta {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  padding: 1.25rem;
+}
+
+.pila > * + * { margin-top: 1rem; }
+
+/* --- Navegacion --------------------------------------------------------- */
+
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--color-superficie) 85%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+/* El contenedor de la barra alinea con el contenido, pero sin su respiro vertical. */
+.barra nav { display: flex; align-items: center; gap: 0.25rem; }
+.barra .contenedor { padding-block: 0.75rem; }
+.barra .marca { margin-right: auto; font-weight: 650; letter-spacing: -0.01em; }
+
+.barra a {
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radio-sm);
+  color: var(--color-texto-tenue);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: background var(--transicion), color var(--transicion);
+}
+.barra a:hover { background: var(--color-superficie-tenue); color: var(--color-texto); text-decoration: none; }
+.barra a.activo { background: var(--color-acento-tenue); color: var(--color-acento); font-weight: 600; }
+
+/* --- Formularios -------------------------------------------------------- */
+
+/* Cada bloque del formulario es un fieldset: agrupa de verdad, no solo visualmente. */
+.grupo { border: 0; margin: 0; padding: 0; }
+
+/* El separador es un pseudo-elemento y no el borde del fieldset: un legend interrumpe
+   el borde de su propio fieldset y la linea acabaria cruzando el titulo. */
+.grupo + .grupo { position: relative; margin-top: 1.75rem; padding-top: 1.75rem; }
+.grupo + .grupo::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: var(--color-borde);
+}
+/* Flotando el legend deja de ocupar la zona del borde superior del fieldset y se comporta
+   como un bloque normal, que es lo unico que evita que el separador lo cruce. */
+.grupo legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  /* El margen del flotante es lo que separa: la clearance del siguiente bloque se
+     come su propio margin-top. */
+  margin-bottom: 0.85rem;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -0.006em;
+}
+
+.grupo .ayuda { clear: both; margin: 0; color: var(--color-texto-tenue); font-size: 0.875rem; max-width: 62ch; }
+
+/* Rejilla de campos: doce columnas para poder dar a cada campo el ancho que pide
+   su contenido. Un CVV de tres digitos no necesita el ancho de un formulario. */
+.campos {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.campo { display: flex; flex-direction: column; gap: 0.375rem; grid-column: span 12; }
+.campo--medio   { grid-column: span 6; }
+.campo--tercio  { grid-column: span 4; }
+.campo--corto   { grid-column: span 3; }
+
+@media (max-width: 560px) {
+  .campo--medio, .campo--tercio { grid-column: span 12; }
+  .campo--corto { grid-column: span 6; }
+}
+
+.campo label { font-weight: 550; font-size: 0.875rem; }
+
+.campo input,
+.campo select {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font: inherit;
+  font-size: 0.9375rem;
+  transition: border-color var(--transicion), box-shadow var(--transicion);
+}
+
+.campo input:hover:not(:disabled),
+.campo select:hover:not(:disabled) { border-color: var(--color-borde-fuerte); }
+
+.campo input:focus-visible,
+.campo select:focus-visible {
+  outline: none;
+  border-color: var(--color-acento);
+  box-shadow: var(--anillo);
+}
+
+.campo input::placeholder { color: var(--color-texto-tenue); }
+
+.campo input:disabled,
+.campo select:disabled { background: var(--color-superficie-tenue); color: var(--color-texto-tenue); cursor: not-allowed; }
+
+/* El error se marca en el propio control, no solo en el texto de abajo. */
+.campo input[aria-invalid="true"] { border-color: var(--color-error); }
+.campo input[aria-invalid="true"]:focus-visible { box-shadow: var(--anillo-error); }
+
+/* Los controles numericos cortos no ganan nada con las flechas del navegador. */
+.campo--corto input[type="number"],
+.campo--tercio input[type="number"] { appearance: textfield; }
+.campo--corto input[type="number"]::-webkit-outer-spin-button,
+.campo--corto input[type="number"]::-webkit-inner-spin-button,
+.campo--tercio input[type="number"]::-webkit-outer-spin-button,
+.campo--tercio input[type="number"]::-webkit-inner-spin-button { appearance: none; margin: 0; }
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-error);
+  font-size: 0.8125rem;
+}
+.error::before { content: "!"; display: grid; place-items: center; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--color-error); color: var(--color-superficie); font-size: 0.6875rem; font-weight: 700; }
+
+/* Par de campos que se leen como uno solo (mes / anio). */
+.par { display: flex; align-items: center; gap: 0.4rem; }
+.par input { text-align: center; }
+.par .separador { color: var(--color-texto-tenue); }
+
+/* --- Resumen del total -------------------------------------------------- */
+
+.total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie-tenue);
+}
+.total dt { color: var(--color-texto-tenue); font-size: 0.875rem; margin: 0; }
+.total dd { margin: 0; font-size: 1.375rem; font-weight: 650; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; }
+.total .moneda { font-size: 0.875rem; font-weight: 550; color: var(--color-texto-tenue); margin-left: 0.25rem; }
+
+/* --- Botones ------------------------------------------------------------ */
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radio-sm);
+  background: var(--color-acento);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--transicion), box-shadow var(--transicion), transform var(--transicion);
+}
+
+.boton:hover:not(:disabled) { background: var(--color-acento-fuerte); text-decoration: none; }
+.boton:active:not(:disabled) { transform: translateY(1px); }
+.boton:focus-visible { outline: none; box-shadow: var(--anillo); }
+.boton:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.boton--secundario {
+  background: var(--color-superficie);
+  border-color: var(--color-borde);
+  color: var(--color-texto);
+}
+.boton--secundario:hover:not(:disabled) { background: var(--color-superficie-tenue); border-color: var(--color-borde-fuerte); }
+
+/* Indicador de envio: comunica estado, no decora. */
+.girador {
+  width: 14px; height: 14px; flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: girar 700ms linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* --- Enlaces ------------------------------------------------------------ */
+
+a { color: var(--color-acento); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible { outline: none; border-radius: 3px; box-shadow: var(--anillo); }
+
+.volver { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.9375rem; color: var(--color-texto-tenue); }
+.volver:hover { color: var(--color-acento); }
+
+/* --- Estados del pedido ------------------------------------------------- */
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.estado::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+
+.estado--pendiente  { color: var(--color-pendiente); background: var(--color-pendiente-fondo); }
+.estado--pagado     { color: var(--color-exito);     background: var(--color-exito-fondo); }
+.estado--fallo_pago { color: var(--color-error);     background: var(--color-error-fondo); }
+
+/* Mientras el cobro no se resuelve, el punto late: el estado sigue vivo. */
+.estado--pendiente::before { animation: latir 1.8s var(--salida) infinite; }
+@keyframes latir { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* --- Avisos ------------------------------------------------------------- */
+
+.aviso {
+  border-radius: var(--radio);
+  border: 1px solid var(--color-error);
+  background: var(--color-error-fondo);
+  padding: 0.9rem 1rem;
+}
+.aviso strong { display: block; color: var(--color-error); }
+.aviso p { margin: 0.25rem 0 0; font-size: 0.9375rem; }
+
+/* --- Datos -------------------------------------------------------------- */
+
+table { width: 100%; border-collapse: collapse; }
+
+th {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-texto-tenue);
+  background: var(--color-superficie-tenue);
+  border-bottom: 1px solid var(--color-borde);
+  white-space: nowrap;
+}
+
+td { padding: 0.7rem 0.75rem; text-align: left; border-bottom: 1px solid var(--color-borde); font-size: 0.9375rem; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr { transition: background var(--transicion); }
+tbody tr:hover { background: var(--color-superficie-tenue); }
+
+.numero { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Lista de definiciones para los datos del pedido: pares etiqueta/valor. */
+.datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem 1.5rem; margin: 1rem 0 0; }
+.datos > div { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.datos dt { color: var(--color-texto-tenue); font-size: 0.8125rem; }
+.datos dd { margin: 0; font-size: 0.9375rem; overflow-wrap: anywhere; }
+
+/* --- Estado vacio ------------------------------------------------------- */
+
+.vacio { text-align: center; padding: 2.5rem 1.25rem; }
+.vacio h2 { margin-bottom: 0.35rem; }
+.vacio p { margin: 0 auto 1.25rem; color: var(--color-texto-tenue); max-width: 46ch; }
+
+/* --- Carga -------------------------------------------------------------- */
+
+/* Esqueletos en lugar de un spinner suelto: la pagina no cambia de forma al cargar. */
+.esqueleto {
+  border-radius: var(--radio-sm);
+  background: linear-gradient(90deg,
+    var(--color-superficie-tenue) 25%,
+    color-mix(in srgb, var(--color-borde) 45%, transparent) 37%,
+    var(--color-superficie-tenue) 63%);
+  background-size: 400% 100%;
+  animation: brillo 1.4s ease infinite;
+}
+@keyframes brillo { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+.esqueleto--fila { height: 44px; }
+.esqueleto--fila + .esqueleto--fila { margin-top: 0.5rem; }
+
+/* --- Utilidades --------------------------------------------------------- */
+
+.tenue { color: var(--color-texto-tenue); font-size: 0.875rem; }
+.desplazable { overflow-x: auto; }
+
+.solo-lectores {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* La entrada de contenido nuevo se anuncia con un desplazamiento minimo. */
+.aparece { animation: aparecer 200ms var(--salida) both; }
+@keyframes aparecer { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .aparece { animation: none; }
+}

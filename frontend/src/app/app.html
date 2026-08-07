@@ -1,0 +1,13 @@
+<header class="barra">
+  <nav class="contenedor">
+    <span class="marca">Pedidos</span>
+    <a routerLink="/orders" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">
+      Listado
+    </a>
+    <a routerLink="/orders/new" routerLinkActive="activo">Nuevo pedido</a>
+  </nav>
+</header>
+
+<main>
+  <router-outlet />
+</main>
