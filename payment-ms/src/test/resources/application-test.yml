@@ -1,0 +1,15 @@
+payment:
+  simulation:
+    decline-threshold: 1000.00
+    # Sin retraso: la latencia simulada solo estorba en las pruebas
+    processing-delay-ms: 0
+
+spring:
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+
+logging:
+  level:
+    org.apache.kafka: WARN
+    org.testcontainers: WARN
