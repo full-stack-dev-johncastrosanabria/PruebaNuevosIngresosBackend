@@ -6,6 +6,7 @@
 FROM node:26-alpine AS builder
 WORKDIR /build
 COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
 RUN npm run build
 

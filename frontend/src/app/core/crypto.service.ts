@@ -47,7 +47,7 @@ export class CryptoService {
   #desdeBase64(valor: string): ArrayBuffer {
     const binario = atob(valor);
     const bytes = new Uint8Array(binario.length);
-    for (let i = 0; i < binario.length; i++) bytes[i] = binario.codePointAt(i);
+    for (let i = 0; i < binario.length; i++) bytes[i] = binario.codePointAt(i) ?? 0;
     return bytes.buffer as ArrayBuffer;
   }
 
