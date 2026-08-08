@@ -10,7 +10,7 @@ export function luhnValidator(): ValidatorFn {
     let suma = 0;
     let duplicar = false;
     for (let i = valor.length - 1; i >= 0; i--) {
-      let digito = valor.charCodeAt(i) - 48;
+      let digito = valor.codePointAt(i) - 48;
       if (duplicar) {
         digito *= 2;
         if (digito > 9) digito -= 9;

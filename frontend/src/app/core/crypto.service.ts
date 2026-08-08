@@ -47,13 +47,13 @@ export class CryptoService {
   #desdeBase64(valor: string): ArrayBuffer {
     const binario = atob(valor);
     const bytes = new Uint8Array(binario.length);
-    for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+    for (let i = 0; i < binario.length; i++) bytes[i] = binario.codePointAt(i);
     return bytes.buffer as ArrayBuffer;
   }
 
   #aBase64(bytes: Uint8Array): string {
     let binario = '';
-    for (const byte of bytes) binario += String.fromCharCode(byte);
+    for (const byte of bytes) binario += String.fromCodePoint(byte);
     return btoa(binario);
   }
 }
