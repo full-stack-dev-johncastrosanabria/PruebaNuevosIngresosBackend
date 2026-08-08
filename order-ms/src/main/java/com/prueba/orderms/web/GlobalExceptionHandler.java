@@ -12,6 +12,7 @@ import org.springframework.kafka.KafkaException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -32,6 +33,17 @@ public class GlobalExceptionHandler {
                 "Uno o mas campos no superaron la validacion");
         problema.setProperty("errors", errores);
         return problema;
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail parametroInvalido(MethodArgumentTypeMismatchException e) {
+        // Un identificador mal formado es un error del cliente, no una falla del servidor
+        String tipoRequerido = e.getRequiredType() != null
+                ? e.getRequiredType().getSimpleName()
+                : "valor";
+        return crear(HttpStatus.BAD_REQUEST, "Parametro invalido",
+                "El valor '%s' no es un %s valido para el parametro '%s'"
+                        .formatted(e.getValue(), tipoRequerido, e.getName()));
     }
 
     @ExceptionHandler(InvalidCardException.class)
