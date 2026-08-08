@@ -1,0 +1,185 @@
+<section class="contenedor contenedor--angosto">
+  <div class="encabezado">
+    <h1>Nuevo pedido</h1>
+    <a class="volver" routerLink="/orders">Volver al listado</a>
+  </div>
+
+  @if (error(); as fallo) {
+    <div class="aviso aparece" role="alert" style="margin-bottom: 1rem">
+      <strong>{{ fallo.title }}</strong>
+      <p>{{ fallo.detail }}</p>
+    </div>
+  }
+
+  <form [formGroup]="formulario" (ngSubmit)="enviar()" class="tarjeta" novalidate>
+
+    <fieldset class="grupo">
+      <legend>Producto</legend>
+
+      <div class="campos">
+        <div class="campo campo--medio">
+          <label for="productSku">SKU</label>
+          <input id="productSku" formControlName="productSku" placeholder="SKU-001"
+                 [attr.aria-invalid]="invalido(formulario.controls.productSku)"
+                 aria-describedby="err-sku" />
+          @if (invalido(formulario.controls.productSku)) {
+            <span class="error" id="err-sku">El SKU es obligatorio</span>
+          }
+        </div>
+
+        <div class="campo campo--medio">
+          <label for="productName">Nombre del producto</label>
+          <input id="productName" formControlName="productName" placeholder="Teclado mecanico"
+                 [attr.aria-invalid]="invalido(formulario.controls.productName)"
+                 aria-describedby="err-producto" />
+          @if (invalido(formulario.controls.productName)) {
+            <span class="error" id="err-producto">El nombre del producto es obligatorio</span>
+          }
+        </div>
+
+        <div class="campo campo--tercio">
+          <label for="quantity">Cantidad</label>
+          <input id="quantity" type="number" min="1" formControlName="quantity"
+                 [attr.aria-invalid]="invalido(formulario.controls.quantity)"
+                 aria-describedby="err-cantidad" />
+          @if (invalido(formulario.controls.quantity)) {
+            <span class="error" id="err-cantidad">Debe ser al menos 1</span>
+          }
+        </div>
+
+        <div class="campo campo--tercio">
+          <label for="unitPrice">Precio unitario</label>
+          <input id="unitPrice" type="number" min="0.01" step="0.01" formControlName="unitPrice"
+                 [attr.aria-invalid]="invalido(formulario.controls.unitPrice)"
+                 aria-describedby="err-precio" />
+          @if (invalido(formulario.controls.unitPrice)) {
+            <span class="error" id="err-precio">Debe ser mayor que cero</span>
+          }
+        </div>
+
+        <div class="campo campo--tercio">
+          <label for="currency">Moneda</label>
+          <select id="currency" formControlName="currency">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="CRC">CRC</option>
+          </select>
+        </div>
+      </div>
+
+      <dl class="total">
+        <dt>Total del pedido</dt>
+        <dd aria-live="polite">
+          {{ total() | number: '1.2-2' }}<span class="moneda">{{ formulario.controls.currency.value }}</span>
+        </dd>
+      </dl>
+    </fieldset>
+
+    <fieldset class="grupo">
+      <legend>Cliente</legend>
+
+      <div class="campos">
+        <div class="campo campo--medio">
+          <label for="customerName">Nombre</label>
+          <input id="customerName" formControlName="customerName" autocomplete="name"
+                 placeholder="Ana Torres"
+                 [attr.aria-invalid]="invalido(formulario.controls.customerName)"
+                 aria-describedby="err-cliente" />
+          @if (invalido(formulario.controls.customerName)) {
+            <span class="error" id="err-cliente">El nombre del cliente es obligatorio</span>
+          }
+        </div>
+
+        <div class="campo campo--medio">
+          <label for="customerEmail">Correo</label>
+          <input id="customerEmail" type="email" formControlName="customerEmail"
+                 autocomplete="email" placeholder="ana@ejemplo.com"
+                 [attr.aria-invalid]="invalido(formulario.controls.customerEmail)"
+                 aria-describedby="err-correo" />
+          @if (invalido(formulario.controls.customerEmail)) {
+            <span class="error" id="err-correo">Ingrese un correo valido</span>
+          }
+        </div>
+      </div>
+    </fieldset>
+
+    @let tarjeta = formulario.controls.card;
+
+    <fieldset class="grupo" [formGroup]="tarjeta">
+      <legend>Tarjeta</legend>
+      <p class="ayuda">
+        Los datos se cifran en este navegador con la llave publica del servidor. El numero
+        completo nunca viaja en claro ni queda guardado.
+      </p>
+
+      <div class="campos">
+        <div class="campo">
+          <label for="pan">
+            Numero de tarjeta
+            @if (marca(); as m) {
+              <span class="tenue" aria-live="polite">&nbsp;· {{ m }}</span>
+            }
+          </label>
+          <input id="pan" formControlName="pan" inputmode="numeric" autocomplete="cc-number"
+                 maxlength="23" placeholder="4242 4242 4242 4242"
+                 (input)="formatearPan($event)"
+                 [attr.aria-invalid]="invalido(tarjeta.controls.pan)"
+                 aria-describedby="err-pan" />
+          @if (invalido(tarjeta.controls.pan)) {
+            <span class="error" id="err-pan">El numero de tarjeta no es valido</span>
+          }
+        </div>
+
+        <div class="campo campo--medio">
+          <label for="holder">Titular</label>
+          <input id="holder" formControlName="holder" autocomplete="cc-name"
+                 placeholder="ANA TORRES"
+                 [attr.aria-invalid]="invalido(tarjeta.controls.holder)"
+                 aria-describedby="err-titular" />
+          @if (invalido(tarjeta.controls.holder)) {
+            <span class="error" id="err-titular">El titular es obligatorio</span>
+          }
+        </div>
+
+        <div class="campo campo--corto">
+          <label for="expiryMonth">Vencimiento</label>
+          <div class="par">
+            <input id="expiryMonth" type="number" min="1" max="12" formControlName="expiryMonth"
+                   autocomplete="cc-exp-month" aria-label="Mes de vencimiento" />
+            <span class="separador" aria-hidden="true">/</span>
+            <input id="expiryYear" type="number" formControlName="expiryYear"
+                   autocomplete="cc-exp-year" aria-label="Anio de vencimiento" />
+          </div>
+        </div>
+
+        <div class="campo campo--corto">
+          <label for="cvv">Codigo</label>
+          <input id="cvv" formControlName="cvv" inputmode="numeric" autocomplete="cc-csc"
+                 maxlength="4" placeholder="123"
+                 [attr.aria-invalid]="invalido(tarjeta.controls.cvv)"
+                 aria-describedby="err-cvv" />
+          @if (invalido(tarjeta.controls.cvv)) {
+            <span class="error" id="err-cvv">Debe tener 3 o 4 digitos</span>
+          }
+        </div>
+      </div>
+
+      @if (tarjeta.touched && tarjeta.hasError('expired')) {
+        <p class="error" style="margin-top: 0.75rem">La tarjeta esta vencida</p>
+      }
+    </fieldset>
+
+    <div class="encabezado" style="margin: 1.75rem 0 0">
+      <span class="tenue">Se cobrara {{ total() | number: '1.2-2' }}
+        {{ formulario.controls.currency.value }}</span>
+      <a class="boton boton--secundario" routerLink="/orders">Cancelar</a>
+      <button class="boton" type="submit" [disabled]="enviando()">
+        @if (enviando()) {
+          <span class="girador" aria-hidden="true"></span>Procesando...
+        } @else {
+          Crear pedido
+        }
+      </button>
+    </div>
+  </form>
+</section>
