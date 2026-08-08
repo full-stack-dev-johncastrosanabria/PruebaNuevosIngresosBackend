@@ -1,0 +1,74 @@
+<section class="contenedor contenedor--angosto">
+  <a class="volver" routerLink="/orders">Volver al listado</a>
+
+  @if (error(); as fallo) {
+    <div class="aviso aparece" role="alert" style="margin-top: 1rem">
+      <strong>{{ fallo.title }}</strong>
+      <p>{{ fallo.detail }}</p>
+    </div>
+  } @else if (pedido(); as p) {
+    <div class="encabezado" style="margin-top: 0.75rem">
+      <h1>{{ p.productName }}</h1>
+      <span class="estado estado--{{ p.status.toLowerCase() }}" aria-live="polite">
+        {{ p.status }}
+      </p>
+    </div>
+
+    <div class="tarjeta pila">
+      @if (enEspera()) {
+        <p class="tenue" style="margin: 0">Esperando la confirmacion del cobro...</p>
+      }
+
+      @if (sondeoAgotado()) {
+        <div role="status" class="pila">
+          <p style="margin: 0">El pedido sigue pendiente tras varios intentos.</p>
+          <button class="boton boton--secundario" (click)="reintentar()">Consultar de nuevo</button>
+        </div>
+      }
+
+      @switch (p.status) {
+        @case ('PAGADO') {
+          <dl class="datos" style="margin-top: 0">
+            <dt>Referencia de pago</dt>
+            <dd class="numero">{{ p.paymentReference }}</dd>
+          </dl>
+        }
+        @case ('FALLO_PAGO') {
+          <p class="error" style="margin: 0">{{ p.failureReason }}</p>
+        }
+      }
+
+      <dl class="datos">
+        <dt>SKU</dt>
+        <dd>{{ p.productSku }}</dd>
+
+        <dt>Cantidad</dt>
+        <dd class="numero">{{ p.quantity }}</dd>
+
+        <dt>Precio unitario</dt>
+        <dd class="numero">{{ p.unitPrice | number: '1.2-2' }} {{ p.currency }}</dd>
+
+        <dt>Total</dt>
+        <dd class="numero"><strong>{{ p.totalAmount | number: '1.2-2' }} {{ p.currency }}</strong></dd>
+
+        <dt>Cliente</dt>
+        <dd>{{ p.customerName }}<br /><span class="tenue">{{ p.customerEmail }}</p></dd>
+
+        <dt>Tarjeta</dt>
+        <dd class="numero">{{ p.cardBrand }} ····{{ p.cardLastFour }}</dd>
+
+        <dt>Creado</dt>
+        <dd>{{ p.createdAt | date: 'medium' }}</dd>
+
+        <dt>Actualizado</dt>
+        <dd>{{ p.updatedAt | date: 'medium' }}</dd>
+      </dl>
+    </div>
+  } @else {
+    <div class="tarjeta" style="margin-top: 1rem" aria-busy="true" aria-live="polite">
+      <span class="solo-lectores">Cargando pedido</p>
+      <div class="esqueleto esqueleto--fila" aria-hidden="true"></div>
+      <div class="esqueleto esqueleto--fila" aria-hidden="true"></div>
+    </div>
+  }
+</section>
