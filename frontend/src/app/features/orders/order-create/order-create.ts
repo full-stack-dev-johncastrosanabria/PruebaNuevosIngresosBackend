@@ -128,8 +128,8 @@ export class OrderCreate {
       const creado = await firstValueFrom(this.#orders.create({ ...pedido, encryptedCard }));
 
       await this.#router.navigate(['/orders', creado.id]);
-    } catch (causa) {
-      this.error.set(causa as ApiError);
+    } catch (error_) {
+      this.error.set(error_ as ApiError);
     } finally {
       this.enviando.set(false);
     }
