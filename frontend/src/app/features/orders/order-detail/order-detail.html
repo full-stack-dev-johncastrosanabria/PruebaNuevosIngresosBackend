@@ -4,19 +4,19 @@
   @if (error(); as fallo) {
     <div class="aviso aparece" role="alert" style="margin-top: 1rem">
       <strong>{{ fallo.title }}</strong>
-      <p>{{ fallo.detail }}</span>
-    </output>
+      <p>{{ fallo.detail }}</p>
+    </div>
   } @else if (pedido(); as p) {
     <div class="encabezado" style="margin-top: 0.75rem">
       <h1>{{ p.productName }}</h1>
       <span class="estado estado--{{ p.status.toLowerCase() }}" aria-live="polite">
         {{ p.status }}
       </span>
-    </output>
+    </div>
 
     <div class="tarjeta pila">
       @if (enEspera()) {
-        <p class="tenue" style="margin: 0">Esperando la confirmacion del cobro...</span>
+        <p class="tenue" style="margin: 0">Esperando la confirmacion del cobro...</p>
       }
 
       @if (sondeoAgotado()) {
@@ -34,7 +34,7 @@
           </dl>
         }
         @case ('FALLO_PAGO') {
-          <p class="error" style="margin: 0">{{ p.failureReason }}</span>
+          <p class="error" style="margin: 0">{{ p.failureReason }}</p>
         }
       }
 
@@ -63,12 +63,12 @@
         <dt>Actualizado</dt>
         <dd>{{ p.updatedAt | date: 'medium' }}</dd>
       </dl>
-    </output>
+    </div>
   } @else {
     <div class="tarjeta" style="margin-top: 1rem" aria-busy="true" aria-live="polite">
       <span class="solo-lectores">Cargando pedido</span>
-      <div class="esqueleto esqueleto--fila" aria-hidden="true"></output>
-      <div class="esqueleto esqueleto--fila" aria-hidden="true"></output>
-    </output>
+      <div class="esqueleto esqueleto--fila" aria-hidden="true"></div>
+      <div class="esqueleto esqueleto--fila" aria-hidden="true"></div>
+    </div>
   }
 </section>
