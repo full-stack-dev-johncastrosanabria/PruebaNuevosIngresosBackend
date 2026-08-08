@@ -1,0 +1,90 @@
+<section class="contenedor">
+  <div class="encabezado">
+    <h1>Pedidos</h1>
+    <a class="boton" routerLink="/orders/new">Nuevo pedido</a>
+  </div>
+
+  <div class="campo" style="max-width: 220px; margin-bottom: 1rem">
+    <label for="filtro">Filtrar por estado</label>
+    <select id="filtro" [value]="filtro() ?? ''"
+            (change)="cambiarFiltro($any($event.target).value)">
+      <option value="">Todos</option>
+      @for (estado of estados; track estado) {
+        <option [value]="estado">{{ estado }}</option>
+      }
+    </select>
+  </div>
+
+  @if (error(); as fallo) {
+    <div class="aviso aparece" role="alert">
+      <strong>{{ fallo.title }}</strong>
+      <p>{{ fallo.detail }}</p>
+    </div>
+  } @else if (cargando()) {
+    <div class="tarjeta" aria-busy="true" aria-live="polite">
+      <span class="solo-lectores">Cargando pedidos</span>
+      <div class="esqueleto esqueleto--fila" aria-hidden="true"></div>
+      <div class="esqueleto esqueleto--fila" aria-hidden="true"></div>
+      <div class="esqueleto esqueleto--fila" aria-hidden="true"></div>
+    </div>
+  } @else if (pedidos().length === 0) {
+    <div class="tarjeta vacio">
+      @if (filtro()) {
+        <h2>Sin pedidos en este estado</h2>
+        <p>Ningun pedido esta en <strong>{{ filtro() }}</strong> ahora mismo. Pruebe con otro
+          estado o vuelva a "Todos".</p>
+        <button class="boton boton--secundario" (click)="cambiarFiltro('')">Ver todos</button>
+      } @else {
+        <h2>Todavia no hay pedidos</h2>
+        <p>Al crear uno se registra como pendiente y pasa a cobro automaticamente. El estado
+          se actualiza solo, sin recargar la pagina.</p>
+        <a class="boton" routerLink="/orders/new">Crear el primer pedido</a>
+      }
+    </div>
+  } @else {
+    <div class="tarjeta desplazable" style="padding: 0">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Producto</th>
+            <th scope="col">Cliente</th>
+            <th scope="col">Total</th>
+            <th scope="col">Tarjeta</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Creado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (pedido of pedidos(); track pedido.id) {
+            <tr>
+              <td><a [routerLink]="['/orders', pedido.id]">{{ pedido.productName }}</a></td>
+              <td>{{ pedido.customerName }}</td>
+              <td class="numero">{{ pedido.totalAmount | number: '1.2-2' }} {{ pedido.currency }}</td>
+              <td class="numero">{{ pedido.cardBrand }} ····{{ pedido.cardLastFour }}</td>
+              <td>
+                <span class="estado estado--{{ pedido.status.toLowerCase() }}">
+                  {{ pedido.status }}
+                </span>
+              </td>
+              <td class="numero">{{ pedido.createdAt | date: 'short' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPaginas() > 1) {
+      <div class="encabezado" style="margin-top: 1rem">
+        <span class="tenue">Pagina {{ pagina() + 1 }} de {{ totalPaginas() }}</span>
+        <button class="boton boton--secundario" [disabled]="pagina() === 0"
+                (click)="irA(pagina() - 1)">
+          Anterior
+        </button>
+        <button class="boton boton--secundario" [disabled]="pagina() + 1 >= totalPaginas()"
+                (click)="irA(pagina() + 1)">
+          Siguiente
+        </button>
+      </div>
+    }
+  }
+</section>
