@@ -11,7 +11,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 
 import java.time.Duration;
@@ -101,8 +101,7 @@ class OrderFlowIntegrationTest extends IntegrationTestBase {
             assertThat(evento.card().lastFour()).isEqualTo("4242");
             assertThat(evento.card().brand()).isEqualTo("VISA");
             // Verificar via JSON que el PAN completo no esta serializado
-            String json = new com.fasterxml.jackson.databind.ObjectMapper()
-                    .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
+            String json = new tools.jackson.databind.ObjectMapper()
                     .writeValueAsString(evento);
             assertThat(json).doesNotContain("4242424242424242");
             assertThat(json).doesNotContain("cvv");
@@ -178,7 +177,7 @@ class OrderFlowIntegrationTest extends IntegrationTestBase {
         Map<String, Object> propiedades = KafkaTestUtils.consumerProps(
                 KAFKA.getBootstrapServers(), "prueba-" + UUID.randomUUID(), "true");
         propiedades.put("key.deserializer", StringDeserializer.class);
-        propiedades.put("value.deserializer", JsonDeserializer.class);
+        propiedades.put("value.deserializer", JacksonJsonDeserializer.class);
         propiedades.put("spring.json.trusted.packages", "com.prueba.orderms.messaging");
         propiedades.put("spring.json.value.default.type",
                 "com.prueba.orderms.messaging.OrderPlacedEvent");

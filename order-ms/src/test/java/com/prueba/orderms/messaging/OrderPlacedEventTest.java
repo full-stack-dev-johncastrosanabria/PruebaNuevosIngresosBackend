@@ -1,7 +1,6 @@
 package com.prueba.orderms.messaging;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
 import com.prueba.orderms.domain.Order;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class OrderPlacedEventTest {
 
-    private final ObjectMapper mapeador = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final ObjectMapper mapeador = new ObjectMapper();
 
     private Order pedido() {
         return Order.nuevo("Ana Torres", "ana@ejemplo.com", "SKU-1", "Teclado", 2,

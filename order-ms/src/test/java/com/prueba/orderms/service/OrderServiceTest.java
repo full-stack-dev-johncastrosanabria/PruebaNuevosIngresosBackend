@@ -1,6 +1,6 @@
 package com.prueba.orderms.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.prueba.orderms.card.InvalidCardException;
 import com.prueba.orderms.crypto.CryptoException;
 import com.prueba.orderms.crypto.RsaCipherService;
