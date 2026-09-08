@@ -63,7 +63,7 @@ describe('CryptoService', () => {
     responderLlave(publicKeyBase64);
     const cifrado = await promesa;
 
-    const bytes = Uint8Array.from(atob(cifrado), (c) => c.codePointAt(0));
+    const bytes = Uint8Array.from(atob(cifrado), (c) => c.charCodeAt(0));
     const claro = await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, privateKey, bytes);
     const datos = JSON.parse(new TextDecoder().decode(claro)) as Record<string, unknown>;
 
