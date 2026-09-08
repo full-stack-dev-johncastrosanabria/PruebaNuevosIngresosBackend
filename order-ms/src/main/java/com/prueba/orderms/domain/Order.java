@@ -84,6 +84,13 @@ public class Order {
                               int quantity, BigDecimal unitPrice, String currency,
                               String cardHolder, String cardBrand, String cardLastFour,
                               String encryptedCardPayload) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        }
+        if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Unit price must be greater than zero");
+        }
+
         Order pedido = new Order();
         pedido.id = UUID.randomUUID();
         pedido.customerName = customerName;

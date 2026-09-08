@@ -21,7 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Container;
@@ -113,7 +113,7 @@ class PaymentFlowIntegrationTest {
         Map<String, Object> propiedades = KafkaTestUtils.consumerProps(
                 KAFKA.getBootstrapServers(), "prueba-" + UUID.randomUUID(), "true");
         propiedades.put("key.deserializer", StringDeserializer.class);
-        propiedades.put("value.deserializer", JsonDeserializer.class);
+        propiedades.put("value.deserializer", JacksonJsonDeserializer.class);
         propiedades.put("spring.json.trusted.packages", "com.prueba.paymentms.messaging");
         propiedades.put("spring.json.value.default.type",
                 "com.prueba.paymentms.messaging.PaymentProcessedEvent");
