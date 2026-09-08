@@ -16,9 +16,11 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -84,5 +86,50 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.title").value("Solicitud invalida"))
                 .andExpect(jsonPath("$.errors").isMap());
+    }
+
+    // Las excepciones estandar de Spring MVC salian como 500 porque el handler de Exception
+    // se adelantaba a DefaultHandlerExceptionResolver. Estos casos fijan su estado real.
+
+    @Test
+    void devuelveCuatrocientosCuatroCuandoLaRutaNoExiste() throws Exception {
+        mockMvc.perform(get("/api/v1/no-existe"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Recurso no encontrado"))
+                .andExpect(jsonPath("$.detail").value("No existe el recurso 'api/v1/no-existe' en esta API"));
+    }
+
+    @Test
+    void devuelveCuatrocientosCincoConCabeceraAllowCuandoElMetodoNoEstaSoportado() throws Exception {
+        mockMvc.perform(delete("/api/v1/orders/{id}", UUID.randomUUID()))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(header().string("Allow", "GET"))
+                .andExpect(jsonPath("$.title").value("Metodo no permitido"))
+                .andExpect(jsonPath("$.status").value(405));
+    }
+
+    @Test
+    void devuelveCuatrocientosQuinceCuandoElTipoDeContenidoNoEstaSoportado() throws Exception {
+        mockMvc.perform(post("/api/v1/orders")
+                        .contentType(MediaType.TEXT_PLAIN).content("hola"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.title").value("Tipo de contenido no soportado"));
+    }
+
+    @Test
+    void devuelveCuatrocientosCuandoElCuerpoNoEsJsonValido() throws Exception {
+        mockMvc.perform(post("/api/v1/orders")
+                        .contentType(MediaType.APPLICATION_JSON).content("{roto"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Solicitud invalida"))
+                .andExpect(jsonPath("$.detail").value("El cuerpo de la peticion esta ausente o no es un JSON valido"));
+    }
+
+    @Test
+    void devuelveCuatrocientosCuandoFaltaElCuerpo() throws Exception {
+        mockMvc.perform(post("/api/v1/orders").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Solicitud invalida"));
     }
 }
